@@ -1,0 +1,204 @@
+<html>
+<head>
+
+  <title>Budgtr</title>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"   integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="   crossorigin="anonymous"></script>
+<script src="/socket.io/socket.io.js"></script>
+
+  <style>
+
+    #transArea{
+      display:none;
+    }
+    #register{
+      display:none;
+    }
+    #loginCont{
+      margin:auto;
+      width:50%;
+    }
+  </style>
+
+</head>
+
+<body>
+
+
+  <div class="container">
+    <div class="page-header">
+      <h1>Budgtr</h1>
+    </div>
+    <div id="login" class="row">
+        <div class="container" id="loginCont">
+          <div class="well">
+            <form class="form-inline" id="loginInfo">
+
+              <div class="form-group">
+                <input type="input" class="form-control" id="username" placeholder="Username">
+              </div>
+
+              <div class="form-group">
+                <input type="password" class="form-control" id="password" placeholder="Password">
+              </div>
+
+              <button type="submit" class="btn btn-default">Login</button>
+
+            </form>
+
+            <form class="form-group" id="regBtn">
+              <button type="submit" class="btn btn-default">Register</button>
+            </form>
+          </div>
+        </div>
+    </div>
+
+    <div id="register" class="row">
+        <div class="container" id="loginCont">
+          <div class="well">
+            <form class="form-inline" id="registerInfo">
+
+              <div class="form-group">
+                <input type="input" class="form-control" id="usernameReg" placeholder="Username">
+              </div>
+
+              <div class="form-group">
+                <input type="password" class="form-control" id="passwordReg" placeholder="Password">
+              </div>
+
+              <button type="submit" class="btn btn-default">Register</button>
+
+            </form>
+          </div>
+        </div>
+    </div>
+
+
+    <div id="transArea" class="row">
+      <div class="col-sm-4">
+        <div class="well">
+          <h2 id="user"></h2>
+          <h4 id="budget"></h4>
+          <form id="signOut">
+            <button type="submit" class="btn btn-default">Sign Out</button>
+          </form>
+        </div>
+      </div>
+
+      <div class="col-sm-8">
+
+
+        <form class="form-inline" id="newTransForm">
+
+          <div class="form-group">
+            <input type="input" class="form-control" id="totalIn" placeholder="Total amount spent">
+          </div>
+
+          <div class="form-group">
+            <input type="input" class="form-control" id="dateIn" placeholder="Date of transaction">
+          </div>
+
+          <div class="form-group">
+            <input type="input" class="form-control" id="locIn" placeholder="Location of transaction">
+          </div>
+
+          <button type="submit" class="btn btn-default">Submit</button>
+
+        </form>
+
+
+        <div class="transactions" id="transactions">
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    $(function(){
+      var socket = io.connect();
+
+      var $login = $('#login');
+      var $loginInfo = $('#loginInfo');
+      var $username = $('#username');
+      var $password = $('#password');
+      var $regBtn = $('#regBtn');
+      var $signOut = $('#signOut');
+
+      var $registerInfo = $('#registerInfo');
+      var $register = $('#register');
+      var $usernameReg = $('#usernameReg');
+      var $passwordReg = $('#passwordReg');
+
+      var $user = $('#user');
+      var $budget = $('#budget');
+
+      var $transactions = $('#transactions');
+      var $transArea = $('#transArea');
+
+      var $newTransForm= $('#newTransForm');
+      var $totalIn = $('#totalIn');
+      var $dateIn = $('#dateIn');
+      var $locIn = $('#locIn');
+
+      var $userLogged = '';
+      var $userid = 0;
+
+      $signOut.submit(function(e){
+        $userLogged = '';
+        $userid = 0;
+        $transArea.hide();
+        $login.show();
+      });
+
+      $regBtn.submit(function(e){
+        e.preventDefault();
+        $login.hide();
+        $register.show();
+      });
+
+      $registerInfo.submit(function(e){
+        e.preventDefault();
+        socket.emit('register user', $usernameReg.val(), $passwordReg.val());
+      })
+
+      $loginInfo.submit(function(e){
+        e.preventDefault();
+        socket.emit('check login', $username.val(), $password.val());
+      });
+
+      socket.on('user exists', function(data){
+        $login.hide();
+        $register.hide();
+        $transArea.show();
+        $userLogged = data.username;
+        $userid = data.userid;
+        $user.text('Welcome, '+$userLogged+'.');
+        socket.emit('load transactions', $userid);
+      });
+
+      socket.on('user does not exist', function(){
+        $login.append('<p id="loginCont">Incorrect credentials.</p>');
+      });
+
+      $newTransForm.submit(function(e){
+        e.preventDefault();
+        console.log($totalIn.val() + $dateIn.val() + $locIn.val());
+        socket.emit('insert transaction', $totalIn.val(), $dateIn.val(), $locIn.val(), $userid);
+      });
+
+      socket.on('new transaction', function(data){
+        $transactions.append('<div class="well well-sm"><h3>'+data.total+
+        '</h3><h4>'+data.date+
+        '</h4><h4>'+data.location+'</h4></div>');
+      });
+    });
+
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+</body>
+</html>
