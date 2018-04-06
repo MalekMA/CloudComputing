@@ -1,0 +1,370 @@
+<html>
+<head>
+
+  <title>Budgtr</title>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://code.jquery.com/jquery-3.3.1.min.js"   integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="   crossorigin="anonymous"></script>
+<script src="/socket.io/socket.io.js"></script>
+
+  <style>
+
+    #transArea{
+      display:none;
+    }
+    #register{
+      display:none;
+    }
+    #loginCont{
+      margin:auto;
+      width:50%;
+    }
+    
+  </style>
+
+</head>
+
+<body>
+
+
+  <div class="container">
+    <div class="page-header">
+      <h1>Budgtr</h1>
+    </div>
+    <div id="login" class="row">
+        <div class="container" id="loginCont">
+          <div class="well">
+            <form class="form-inline" id="loginInfo">
+
+              <div class="form-group">
+                <input type="input" class="form-control" id="username" placeholder="Username">
+              </div>
+
+              <div class="form-group">
+                <input type="password" class="form-control" id="password" placeholder="Password">
+              </div>
+
+              <button type="submit" class="btn btn-default">Login</button>
+
+            </form>
+
+            <form class="form-group" id="regBtn">
+              <button type="submit" class="btn btn-default">Register</button>
+            </form>
+          </div>
+        </div>
+    </div>
+
+    <div id="register" class="row">
+        <div class="container" id="loginCont">
+          <div class="well">
+            <form class="form-inline" id="registerInfo">
+
+              <div class="form-group">
+                <input type="input" class="form-control" id="usernameReg" placeholder="Username">
+              </div>
+
+              <div class="form-group">
+                <input type="password" class="form-control" id="passwordReg" placeholder="Password">
+              </div>
+
+              <button type="submit" class="btn btn-default">Register</button>
+
+            </form>
+          </div>
+        </div>
+    </div>
+
+
+    <div id="transArea" class="row">
+      <div class="col-sm-4">
+        <div class="well">
+          <h2 id="user"></h2>
+          <form id="signOut">
+            <button type="submit" class="btn btn-default">Sign Out</button>
+          </form>
+        </div>
+
+        <div class="well well-sm">
+
+          <form class="form-inline" id="updatedBudgetForm">
+
+            <div class="form-group">
+              <input type="input" class="form-control" id="newBudgetIn" placeholder="Update Budget">
+            </div>
+
+            <button type="submit" class="btn btn-default">Submit</button>
+
+          </form>
+        </div>
+        <div class="budget" id="budget">
+
+        </div>
+
+
+
+
+        <div class="well">
+          <button type="button" id="jan" class="btn btn-link">January</button></br>
+          <button type="button" id="feb" class="btn btn-link">February</button></br>
+          <button type="button" id="mar" class="btn btn-link">March</button></br>
+          <button type="button" id="apr" class="btn btn-link">April</button></br>
+          <button type="button" id="may" class="btn btn-link">May</button></br>
+          <button type="button" id="jun" class="btn btn-link">June</button></br>
+          <button type="button" id="jul" class="btn btn-link">July</button></br>
+          <button type="button" id="aug" class="btn btn-link">August</button></br>
+          <button type="button" id="sep" class="btn btn-link">September</button></br>
+          <button type="button" id="oct" class="btn btn-link">October</button></br>
+          <button type="button" id="nov" class="btn btn-link">November</button></br>
+          <button type="button" id="dec" class="btn btn-link">December</button></br>
+        </div>
+
+      </div>
+
+      <div class="col-sm-8">
+
+
+        <form class="form-inline" id="newTransForm">
+
+          <div class="form-group">
+            <input type="input" class="form-control" id="totalIn" placeholder="Total amount spent">
+          </div>
+
+          <div class="form-group">
+            <input type="input" class="form-control" id="dateIn" placeholder="Date of transaction">
+          </div>
+
+          <div class="form-group">
+            <input type="input" class="form-control" id="locIn" placeholder="Location of transaction">
+          </div>
+
+          <div class="form-group">
+            <input type="input" class="form-control" id="methodIn" placeholder="Pay Method">
+          </div>
+
+          <button type="submit" class="btn btn-default">Submit</button>
+
+        </form>
+
+
+        <div class="transactions" id="transactions">
+        </div>
+
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+
+    $(function(){
+      var socket = io.connect();
+
+      var $login = $('#login');
+      var $loginInfo = $('#loginInfo');
+      var $username = $('#username');
+      var $password = $('#password');
+      var $regBtn = $('#regBtn');
+      var $signOut = $('#signOut');
+
+      var $updatedBudgetForm = $('#updatedBudgetForm');
+      var $newBudgetIn = $('#newBudgetIn');
+
+      var $registerInfo = $('#registerInfo');
+      var $register = $('#register');
+      var $usernameReg = $('#usernameReg');
+      var $passwordReg = $('#passwordReg');
+
+      var $user = $('#user');
+      var $budget = $('#budget');
+
+      var $transactions = $('#transactions');
+      var $monthly = $('#monthly');
+      var $transArea = $('#transArea');
+
+      var $newTransForm= $('#newTransForm');
+      var $totalIn = $('#totalIn');
+      var $dateIn = $('#dateIn');
+      var $locIn = $('#locIn');
+      var $methodIn = $('#methodIn');
+
+      var $janBtn = $('#jan');
+      var $febBtn = $('#feb');
+      var $marBtn = $('#mar');
+      var $aprBtn = $('#apr');
+      var $mayBtn = $('#may');
+      var $junBtn = $('#jun');
+      var $julBtn = $('#jul');
+      var $augBtn = $('#aug');
+      var $sepBtn = $('#sep');
+      var $octBtn = $('#oct');
+      var $novBtn = $('#nov');
+      var $decBtn = $('#dec');
+
+      //var $edit_budget = $('#edit_budget');
+
+      var $userLogged = '';
+      var $userid = 0;
+      var $month = '';
+
+      $updatedBudgetForm.submit(function (e){
+        e.preventDefault();
+        socket.emit('update budget', $newBudgetIn.val(), $month, $userid);
+      });
+
+      // $edit_budget.click(function(e){
+      //   e.preventDefault();
+      //   $updatedBudgetForm.show();
+      // });
+
+      socket.on('budget updated', function(data){
+        $budget.empty();
+        $budget.append('<div class="well well-sm"><h4>'+$month+ ': ' +data.budget+'</h4></div>');
+      });
+
+      $janBtn.click(function(e){
+        e.preventDefault();
+        $month = "January";
+        $transactions.empty();
+        socket.emit('show monthly', $month, $userid);
+      });
+
+      $febBtn.click(function(e){
+        e.preventDefault();
+        $transactions.empty();
+        $month = "February";
+        socket.emit('show monthly', $month, $userid);
+      });
+      $marBtn.click(function(e){
+        e.preventDefault();
+        $transactions.empty();
+        $month = "March";
+        socket.emit('show monthly', $month, $userid);
+      });
+      $aprBtn.click(function(e){
+        e.preventDefault();
+        $transactions.empty();
+        $month = "April";
+        socket.emit('show monthly', $month, $userid);
+      });
+      $mayBtn.click(function(e){
+        e.preventDefault();
+        $transactions.empty();
+        $month = "May";
+        socket.emit('show monthly', $month, $userid);
+      });
+      $junBtn.click(function(e){
+        e.preventDefault();
+        $transactions.empty();
+        $month = "June";
+        socket.emit('show monthly', $month, $userid);
+      });
+      $julBtn.click(function(e){
+        e.preventDefault();
+        $transactions.empty();
+        $month = "July";
+        socket.emit('show monthly', $month, $userid);
+      });
+      $augBtn.click(function(e){
+        e.preventDefault();
+        $transactions.empty();
+        $month = "August";
+        socket.emit('show monthly', $month, $userid);
+      });
+      $sepBtn.click(function(e){
+        e.preventDefault();
+        $transactions.empty();
+        $month = "September";
+        socket.emit('show monthly', $month, $userid);
+      });
+      $octBtn.click(function(e){
+        e.preventDefault();
+        $transactions.empty();
+        $month = "October";
+        socket.emit('show monthly', $month, $userid);
+      });
+      $novBtn.click(function(e){
+        e.preventDefault();
+        $transactions.empty();
+        $month = "November";
+        socket.emit('show monthly', $month, $userid);
+      });
+      $decBtn.click(function(e){
+        e.preventDefault();
+        $transactions.empty();
+        $month = "December";
+        socket.emit('show monthly', $month, $userid);
+      });
+
+
+
+      socket.on('monthly', function(data){
+        $transactions.append('<div class="well well-sm"><h4>'+data.total+
+        '</h4><h5>'+data.date+
+        '</h5><h5>'+data.location+'</h5><h5>'+data.method+'</h5></div>');
+      });
+
+      $signOut.submit(function(e){
+        $userLogged = '';
+        $userid = 0;
+        $transArea.hide();
+        $login.show();
+      });
+
+      $regBtn.submit(function(e){
+        e.preventDefault();
+        $login.hide();
+        $register.show();
+      });
+
+      $registerInfo.submit(function(e){
+        e.preventDefault();
+        socket.emit('register user', $usernameReg.val(), $passwordReg.val());
+      })
+
+      $loginInfo.submit(function(e){
+        e.preventDefault();
+        socket.emit('check login', $username.val(), $password.val());
+      });
+
+      socket.on('user exists', function(data){
+        $login.hide();
+        $register.hide();
+        $transArea.show();
+        $userLogged = data.username;
+        $userid = data.userid;
+        $user.text('Welcome, '+$userLogged+'.');
+        socket.emit('load transactions', $userid);
+      });
+
+      socket.on('user does not exist', function(){
+        $login.append('<p id="loginCont">Incorrect credentials.</p>');
+      });
+
+      $newTransForm.submit(function(e){
+        e.preventDefault();
+        console.log($totalIn.val() + $dateIn.val() + $locIn.val());
+        socket.emit('insert transaction', $totalIn.val(), $dateIn.val(), $locIn.val(), $userid, $methodIn.val());
+      });
+
+      socket.on('new transaction', function(data){
+        $transactions.append('<div class="well well-sm"><h4>'+data.total+
+        '</h4><h5>'+data.date+
+        '</h5><h5>'+data.location+'</h5><h5>'+data.method+'</h5></div>');
+      });
+
+      socket.on('display budget', function(data){
+        //$edit_budget.show();
+        $budget.empty();
+        $budget.append('<div class="well well-sm"><h4>'+$month+ ': ' +data.budget+'</h4></div>');
+      });
+    });
+
+
+
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+
+</body>
+</html>
